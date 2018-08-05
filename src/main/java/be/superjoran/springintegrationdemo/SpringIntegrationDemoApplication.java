@@ -31,7 +31,7 @@ public class SpringIntegrationDemoApplication {
 	}
 
 	@Bean
-	@InboundChannelAdapter(value = "fileChannel", poller = @Poller(fixedDelay = "1000", maxMessagesPerPoll = "1"))
+	@InboundChannelAdapter(value = "fileChannel", poller = @Poller(fixedDelay = "1000", maxMessagesPerPoll = "5"))
     @Autowired
 	public MessageSource<File> fileReadingMessageSource(@Value("${input.directory}") String inputDirectory) {
 		FileReadingMessageSource sourceReader= new FileReadingMessageSource();
@@ -79,7 +79,7 @@ public class SpringIntegrationDemoApplication {
     @Bean
     @ServiceActivator(inputChannel= "movieChannel")
     @Autowired
-    public MessageHandler movieMessageHandler(@Value("${output.directory.images}") String movieDirectory) {
+    public MessageHandler movieMessageHandler(@Value("${output.directory.movies}") String movieDirectory) {
         return this.createFileWritingMessageHandler(movieDirectory);
     }
 
