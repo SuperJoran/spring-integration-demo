@@ -1,5 +1,7 @@
 package be.superjoran.springintegrationdemo;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -28,17 +30,12 @@ public class SpringIntegrationDemoApplication {
 		SpringApplication.run(SpringIntegrationDemoApplication.class, args);
 	}
 
-	private String inputDirectory = "the_source_dir";
-	private String outputDirectory = "the_dest_dir";
-	private String filePattern = "*.JPG";
-
-
-
 	@Bean
 	@InboundChannelAdapter(value = "fileChannel", poller = @Poller(fixedDelay = "1000", maxMessagesPerPoll = "1"))
-	public MessageSource<File> fileReadingMessageSource() {
+    @Autowired
+	public MessageSource<File> fileReadingMessageSource(@Value("${input.directory}") String inputDirectory) {
 		FileReadingMessageSource sourceReader= new FileReadingMessageSource();
-		sourceReader.setDirectory(new File(this.inputDirectory));
+		sourceReader.setDirectory(new File(inputDirectory));
 		return sourceReader;
 	}
 
@@ -52,7 +49,7 @@ public class SpringIntegrationDemoApplication {
 
     @Router(inputChannel = "fileChannel")
     public String route(File payload) {
-	    String route = "null";
+	    String route = "nullChannel";
 	    if(payload.getAbsolutePath().endsWith(".JPG")) {
             route = "imageChannel";
         } else if(payload.getAbsolutePath().endsWith(".MOV")) {
@@ -68,12 +65,9 @@ public class SpringIntegrationDemoApplication {
 
 	@Bean
 	@ServiceActivator(inputChannel= "imageChannel")
-	public MessageHandler imageMessageHandler() {
-		FileWritingMessageHandler handler = new FileWritingMessageHandler(new File(this.outputDirectory + "/images"));
-		handler.setFileExistsMode(FileExistsMode.REPLACE);
-		handler.setExpectReply(false);
-		handler.setDeleteSourceFiles(true);
-		return handler;
+    @Autowired
+	public MessageHandler imageMessageHandler(@Value("${output.directory.images}") String imageDirectory) {
+        return this.createFileWritingMessageHandler(imageDirectory);
 	}
 
     @Bean
@@ -83,8 +77,13 @@ public class SpringIntegrationDemoApplication {
 
     @Bean
     @ServiceActivator(inputChannel= "movieChannel")
-    public MessageHandler movieMessageHandler() {
-        FileWritingMessageHandler handler = new FileWritingMessageHandler(new File(this.outputDirectory + "/movies"));
+    @Autowired
+    public MessageHandler movieMessageHandler(@Value("${output.directory.images}") String movieDirectory) {
+        return this.createFileWritingMessageHandler(movieDirectory);
+    }
+
+    private MessageHandler createFileWritingMessageHandler(String directory) {
+        FileWritingMessageHandler handler = new FileWritingMessageHandler(new File(directory));
         handler.setFileExistsMode(FileExistsMode.REPLACE);
         handler.setExpectReply(false);
         handler.setDeleteSourceFiles(true);
