@@ -50,9 +50,10 @@ public class SpringIntegrationDemoApplication {
     @Router(inputChannel = "fileChannel")
     public String route(File payload) {
 	    String route = "nullChannel";
-	    if(payload.getAbsolutePath().endsWith(".JPG")) {
+        String fileName = payload.getAbsolutePath().toLowerCase();
+        if(fileName.endsWith(".jpg")) {
             route = "imageChannel";
-        } else if(payload.getAbsolutePath().endsWith(".MOV")) {
+        } else if(fileName.endsWith(".mov") || fileName.endsWith(".mp4") || fileName.endsWith(".mkv")) {
 	        route = "movieChannel";
         }
         return route;
